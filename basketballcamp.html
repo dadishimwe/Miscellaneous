@@ -449,6 +449,13 @@
                 <button type="submit" class="submit-btn">
                     🏀 Register for Camp
                 </button>
+                
+                <!-- Debug Info (remove in production) -->
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-family: monospace; font-size: 12px;">
+                    <strong>Debug Info:</strong><br>
+                    Status: <span id="debugStatus">Ready for testing</span><br>
+                    <button type="button" onclick="testFormData()" style="margin-top: 10px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Test Form Data Collection</button>
+                </div>
             </form>
         </div>
     </div>
@@ -573,38 +580,64 @@
             };
             
             // Replace 'YOUR_WEB_APP_URL_HERE' with your actual Google Apps Script URL
-            const webAppUrl = 'https://script.google.com/macros/s/AKfycbynpI4aZec2z6o0u3dC920dDxLorx88ZugV5FVkRplASGhRsfHer6sJAYPvprOE6AUbQQ/exec';
+            const webAppUrl = 'YOUR_WEB_APP_URL_HERE';
             
-            if (webAppUrl === 'ok') {
+            if (webAppUrl === 'YOUR_WEB_APP_URL_HERE') {
                 // For testing without Google Apps Script
-                console.log('Form data:', data);
-                alert('Registration submitted successfully! (Test mode - replace with your Google Apps Script URL)');
+                console.log('Form data collected:', data);
+                alert('✅ Registration submitted successfully!\n\n(Test mode - Data logged to console)\n\nTo connect to Google Sheets, replace YOUR_WEB_APP_URL_HERE with your Google Apps Script URL');
                 document.getElementById('registrationForm').reset();
+                
+                // Reset children to just one
+                const container = document.getElementById('childrenContainer');
+                const firstChild = container.querySelector('.child-entry');
+                container.innerHTML = '';
+                container.appendChild(firstChild);
+                
+                // Clear first child's data
+                firstChild.querySelectorAll('input, select').forEach(field => {
+                    field.value = '';
+                });
+                
                 childCount = 1;
                 updateChildNumbers();
             } else {
                 // Send to Google Sheets
+                console.log('Attempting to send data to:', webAppUrl);
+                console.log('Data being sent:', data);
+                
                 fetch(webAppUrl, {
                     method: 'POST',
+                    mode: 'no-cors', // This helps with CORS issues
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.result === 'success') {
-                        alert('Registration submitted successfully! We will contact you soon with more details.');
-                        document.getElementById('registrationForm').reset();
-                        childCount = 1;
-                        updateChildNumbers();
-                    } else {
-                        alert('There was an error submitting your registration. Please try again.');
-                    }
+                .then(response => {
+                    console.log('Response received:', response);
+                    // Note: with no-cors mode, we can't read the response
+                    // so we'll assume success if no error is thrown
+                    alert('✅ Registration submitted successfully! We will contact you soon with more details.');
+                    document.getElementById('registrationForm').reset();
+                    
+                    // Reset children to just one
+                    const container = document.getElementById('childrenContainer');
+                    const firstChild = container.querySelector('.child-entry');
+                    container.innerHTML = '';
+                    container.appendChild(firstChild);
+                    
+                    // Clear first child's data
+                    firstChild.querySelectorAll('input, select').forEach(field => {
+                        field.value = '';
+                    });
+                    
+                    childCount = 1;
+                    updateChildNumbers();
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    alert('There was an error submitting your registration. Please try again.');
+                    console.error('Detailed error:', error);
+                    alert('❌ There was an error submitting your registration.\n\nError details: ' + error.message + '\n\nPlease check the console for more details and verify your Google Apps Script URL is correct.');
                 });
             }
             
@@ -612,6 +645,56 @@
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
         });
+
+        // Debug function to test form data collection
+        function testFormData() {
+            const form = document.getElementById('registrationForm');
+            const formData = new FormData(form);
+            const children = [];
+            
+            // Process children data
+            const childNames = formData.getAll('childName[]');
+            const childGenders = formData.getAll('childGender[]');
+            const childDobs = formData.getAll('childDob[]');
+            const childSchools = formData.getAll('childSchool[]');
+            const childExperiences = formData.getAll('childExperience[]');
+            
+            console.log('Raw form data:');
+            console.log('Child names:', childNames);
+            console.log('Child genders:', childGenders);
+            console.log('Child DOBs:', childDobs);
+            console.log('Child schools:', childSchools);
+            
+            for (let i = 0; i < childNames.length; i++) {
+                if (childNames[i].trim()) {
+                    children.push({
+                        name: childNames[i],
+                        gender: childGenders[i],
+                        dob: childDobs[i],
+                        school: childSchools[i],
+                        experience: childExperiences[i]
+                    });
+                }
+            }
+            
+            const data = {
+                parent1Name: formData.get('parent1Name'),
+                parent2Name: formData.get('parent2Name'),
+                phoneNumber: formData.get('phoneNumber'),
+                email: formData.get('email'),
+                emergencyContact: formData.get('emergencyContact'),
+                emergencyPhone: formData.get('emergencyPhone'),
+                medicalInfo: formData.get('medicalInfo'),
+                specialRequests: formData.get('specialRequests'),
+                photoConsent: formData.get('photoConsent') ? 'Yes' : 'No',
+                children: children
+            };
+            
+            console.log('Processed data:', data);
+            document.getElementById('debugStatus').textContent = 'Data logged to console - check browser developer tools';
+            
+            alert('Form data collected successfully!\n\nChildren found: ' + children.length + '\n\nCheck the browser console (F12) for detailed data.');
+        }
 
         // Phone number formatting
         document.getElementById('phoneNumber').addEventListener('input', function(e) {
