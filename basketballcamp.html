@@ -301,7 +301,7 @@
             <div class="logo-container">
                 <div class="logo">
                     <!-- Replace this with your actual logo -->
-                    <img src="logo.jpeg" alt="Sharp Shooter Basketball Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <img src="your-logo-here.png" alt="Sharp Shooter Basketball Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div style="display: none; color: white; font-size: 18px;">🏀 LOGO</div>
                 </div>
             </div>
@@ -372,6 +372,7 @@
                                             <option value="">Select gender</option>
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
+                                            <option value="other">Other</option>
                                         </select>
                                     </div>
                                 </div>
@@ -453,79 +454,186 @@
     </div>
 
     <script>
-        // Form submission handler
-document.getElementById('registrationForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Show loading state
-    const submitBtn = document.querySelector('.submit-btn');
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = 'Submitting...';
-    submitBtn.disabled = true;
-    
-    // Collect form data
-    const formData = new FormData(this);
-    const children = [];
-    
-    // Process children data
-    const childNames = formData.getAll('childName[]');
-    const childGenders = formData.getAll('childGender[]');
-    const childDobs = formData.getAll('childDob[]');
-    const childSchools = formData.getAll('childSchool[]');
-    const childExperiences = formData.getAll('childExperience[]');
-    
-    for (let i = 0; i < childNames.length; i++) {
-        if (childNames[i].trim()) {
-            children.push({
-                name: childNames[i],
-                gender: childGenders[i],
-                dob: childDobs[i],
-                school: childSchools[i],
-                experience: childExperiences[i]
+        let childCount = 1;
+
+        function addChild() {
+            childCount++;
+            const container = document.getElementById('childrenContainer');
+            
+            const childEntry = document.createElement('div');
+            childEntry.className = 'child-entry';
+            childEntry.innerHTML = `
+                <button type="button" class="remove-child-btn" onclick="removeChild(this)">×</button>
+                <h4>Child #${childCount}</h4>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Child's Name <span class="required">*</span></label>
+                        <input type="text" name="childName[]" required placeholder="Enter child's full name">
+                    </div>
+                    <div class="form-group half">
+                        <label>Gender <span class="required">*</span></label>
+                        <select name="childGender[]" required>
+                            <option value="">Select gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label>Date of Birth <span class="required">*</span></label>
+                        <input type="date" name="childDob[]" required>
+                    </div>
+                    <div class="form-group half">
+                        <label>School Name <span class="required">*</span></label>
+                        <input type="text" name="childSchool[]" required placeholder="Enter school name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Basketball Experience Level</label>
+                    <select name="childExperience[]">
+                        <option value="">Select experience level</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+            `;
+            
+            container.appendChild(childEntry);
+            
+            // Smooth scroll to new child entry
+            childEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function removeChild(button) {
+            const childEntry = button.closest('.child-entry');
+            childEntry.remove();
+            
+            // Update child count and renumber
+            updateChildNumbers();
+        }
+
+        function updateChildNumbers() {
+            const entries = document.querySelectorAll('.child-entry');
+            entries.forEach((entry, index) => {
+                const heading = entry.querySelector('h4');
+                if (heading) {
+                    heading.textContent = `Child #${index + 1}`;
+                }
             });
+            childCount = entries.length;
         }
-    }
-    
-    const data = {
-        parent1Name: formData.get('parent1Name'),
-        parent2Name: formData.get('parent2Name'),
-        phoneNumber: formData.get('phoneNumber'),
-        email: formData.get('email'),
-        emergencyContact: formData.get('emergencyContact'),
-        emergencyPhone: formData.get('emergencyPhone'),
-        medicalInfo: formData.get('medicalInfo'),
-        specialRequests: formData.get('specialRequests'),
-        photoConsent: formData.get('photoConsent') ? 'Yes' : 'No',
-        children: children
-    };
-    
-    // Send to Google Sheets
-    fetch('https://script.google.com/macros/s/AKfycbynpI4aZec2z6o0u3dC920dDxLorx88ZugV5FVkRplASGhRsfHer6sJAYPvprOE6AUbQQ/exec', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.result === 'success') {
-            alert('Registration submitted successfully! We will contact you soon with more details.');
-            document.getElementById('registrationForm').reset();
-        } else {
-            alert('There was an error submitting your registration. Please try again.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('There was an error submitting your registration. Please try again.');
-    })
-    .finally(() => {
-        // Restore button
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-    });
-});
+
+        // Form submission handler
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const children = [];
+            
+            // Process children data
+            const childNames = formData.getAll('childName[]');
+            const childGenders = formData.getAll('childGender[]');
+            const childDobs = formData.getAll('childDob[]');
+            const childSchools = formData.getAll('childSchool[]');
+            const childExperiences = formData.getAll('childExperience[]');
+            
+            for (let i = 0; i < childNames.length; i++) {
+                if (childNames[i].trim()) {
+                    children.push({
+                        name: childNames[i],
+                        gender: childGenders[i],
+                        dob: childDobs[i],
+                        school: childSchools[i],
+                        experience: childExperiences[i]
+                    });
+                }
+            }
+            
+            const data = {
+                parent1Name: formData.get('parent1Name'),
+                parent2Name: formData.get('parent2Name'),
+                phoneNumber: formData.get('phoneNumber'),
+                email: formData.get('email'),
+                emergencyContact: formData.get('emergencyContact'),
+                emergencyPhone: formData.get('emergencyPhone'),
+                medicalInfo: formData.get('medicalInfo'),
+                specialRequests: formData.get('specialRequests'),
+                photoConsent: formData.get('photoConsent') ? 'Yes' : 'No',
+                children: children
+            };
+            
+            // Replace 'YOUR_WEB_APP_URL_HERE' with your actual Google Apps Script URL
+            const webAppUrl = 'https://script.google.com/macros/s/AKfycbynpI4aZec2z6o0u3dC920dDxLorx88ZugV5FVkRplASGhRsfHer6sJAYPvprOE6AUbQQ/exec';
+            
+            if (webAppUrl === 'https://script.google.com/macros/s/AKfycbynpI4aZec2z6o0u3dC920dDxLorx88ZugV5FVkRplASGhRsfHer6sJAYPvprOE6AUbQQ/exec') {
+                // For testing without Google Apps Script
+                console.log('Form data:', data);
+                alert('Registration submitted successfully! (Test mode - replace with your Google Apps Script URL)');
+                document.getElementById('registrationForm').reset();
+                childCount = 1;
+                updateChildNumbers();
+            } else {
+                // Send to Google Sheets
+                fetch(webAppUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.result === 'success') {
+                        alert('Registration submitted successfully! We will contact you soon with more details.');
+                        document.getElementById('registrationForm').reset();
+                        childCount = 1;
+                        updateChildNumbers();
+                    } else {
+                        alert('There was an error submitting your registration. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an error submitting your registration. Please try again.');
+                });
+            }
+            
+            // Restore button
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+
+        // Phone number formatting
+        document.getElementById('phoneNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
+            }
+            e.target.value = value;
+        });
+
+        // Emergency phone formatting
+        document.getElementById('emergencyPhone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
+            }
+            e.target.value = value;
+        });
     </script>
 </body>
 </html>
